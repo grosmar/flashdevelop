@@ -1,19 +1,14 @@
 using System;
 using System.IO;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
 using ProjectManager.Projects;
 using ProjectManager.Helpers;
 using PluginCore;
 using PluginCore.Managers;
 using PluginCore.Localization;
-using ProjectManager.Controls.AS2;
-using ProjectManager.Controls.AS3;
 using PluginCore.Controls;
-using System.Collections;
 using ProjectManager.Actions;
 using System.Collections.Generic;
 using Ookii.Dialogs;
@@ -799,6 +794,7 @@ namespace ProjectManager.Controls
 
         #endregion
 
+        private Project baseProject;
         private Project project;
         private CompilerOptions optionsCopy;
         private Boolean propertiesChanged;
@@ -838,7 +834,12 @@ namespace ProjectManager.Controls
 
         public void SetProject(Project project)
         {
-            this.project = project;
+            this.baseProject = project;
+            if (!string.IsNullOrEmpty(project.ActiveConfiguration) && project.Configurations != null)
+            {
+                this.project = project.Configurations[baseProject.ActiveConfiguration] as Project;
+            }
+
             BuildDisplay();
         }
 
@@ -915,7 +916,12 @@ namespace ProjectManager.Controls
 
         protected virtual void BuildDisplay()
         {
-            this.Text = " " + project.Name + " (" + project.LanguageDisplayName + ") " + TextHelper.GetString("Info.Properties");
+            this.Text = " " + baseProject.Name + " (" + baseProject.LanguageDisplayName + ") " + TextHelper.GetString("Info.Properties");
+
+            if (!string.IsNullOrEmpty(this.baseProject.ActiveConfiguration) && this.baseProject.Configurations != null)
+            {
+                this.Text += " - " + "Configuration:" + " " + this.baseProject.ActiveConfiguration;
+            }
 
             langPlatform = GetLanguagePlatform(project.MovieOptions.Platform);
 

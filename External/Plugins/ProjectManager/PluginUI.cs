@@ -22,7 +22,7 @@ namespace ProjectManager
         LinkLabel help;
         ProjectTreeView tree;
         ProjectContextMenu menu;
-        Boolean isEditingLabel;
+        bool isEditingLabel;
 
         public event EventHandler NewProject;
         public event EventHandler OpenProject;
@@ -41,7 +41,7 @@ namespace ProjectManager
             menu = new ProjectContextMenu();
             menu.Rename.Click += RenameNode;
 
-            treeBar = new TreeBar(menus, menu);
+            treeBar = new TreeBar(menu);
 
             tree = new ProjectTreeView();
             tree.BorderStyle = BorderStyle.None;
@@ -151,10 +151,10 @@ namespace ProjectManager
 
         public bool IsTraceDisabled
         {
-            get { return menus.ConfigurationSelector.SelectedIndex == 1; }
+            get { return menus.ConfigurationSelector.Text.EndsWith(TextHelper.GetString("Info.Debug"), StringComparison.Ordinal); }
             set
             {
-                menus.ConfigurationSelector.SelectedIndex = (value) ? 1 : 0;
+                menus.ConfigurationSelector.SelectedIndex = (value) ? 2 : 1;
                 PluginMain.Settings.GetPrefs(project).DebugMode = !value;
             }
         }

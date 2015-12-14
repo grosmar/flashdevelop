@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using PluginCore;
@@ -25,23 +26,23 @@ namespace ProjectManager.Projects
     public delegate void ProjectUpdatingHandler(Project project);
     public delegate bool BeforeSaveHandler(Project project, string fileName);
 
-    public abstract class Project : IProject
+    public abstract class Project : IMultiConfigProject
     {
-        string path; // full path to this project, including filename
-
+        private string path; // full path to this project, including filename
+         
         protected MovieOptions movieOptions;
-        CompilerOptions compilerOptions;
-        PathCollection classpaths;
-        PathCollection compileTargets;
-        HiddenPathCollection hiddenPaths;
-        AssetCollection libraryAssets;
+        private CompilerOptions compilerOptions;
+        private PathCollection classpaths;
+        private PathCollection compileTargets;
+        private HiddenPathCollection hiddenPaths;
+        private AssetCollection libraryAssets;
         internal Dictionary<string, string> storage;
-        bool traceEnabled; // selected configuration 
-        string targetBuild;
-        string preferredSDK;
-        string currentSDK;
-        PathCollection absClasspaths;
-        BuildEventInfo[] vars; // arguments to replace in paths
+        private bool traceEnabled; // selected configuration 
+        private string targetBuild;
+        private string preferredSDK;
+        private string currentSDK;
+        private PathCollection absClasspaths;
+        private BuildEventInfo[] vars; // arguments to replace in paths
 
         public OutputType OutputType = OutputType.Unknown;
         public string InputPath; // For code injection
@@ -378,6 +379,71 @@ namespace ProjectManager.Projects
         {
             return System.IO.Directory.Exists(path);
         }
+
+        #region IMultiConfigProject
+
+        private IDictionary<string, IProject> configurations;
+        private string activeConfiguration;
+
+        public IDictionary<string, IProject> Configurations
+        {
+            get { return this.configurations; }
+        }
+
+        public string ActiveConfiguration
+        {
+            get { return this.activeConfiguration; }
+        }
+
+        public void SetActiveConfiguration(string configName)
+        {
+            //TODO: Remove try catch
+            try
+            {
+                IProject activeConfig = configurations[configName];
+                this.activeConfiguration = configName;
+
+                FieldInfo[] fields = activeConfig.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance);
+                foreach (var field in fields)
+                {
+                    var value = field.GetValue(this);
+                    field.SetValue(this, value);
+                }
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        public virtual void AddConfiguration(string configName, string fromConfig)
+        {
+            Project newConfig = !string.IsNullOrEmpty(fromConfig) ? GetNewInstance(false) : GetNewInstance(true);
+
+            if (this.configurations == null)
+            {
+                this.configurations = new Dictionary<string, IProject>();
+            }
+
+            this.configurations[configName] = newConfig;
+        }
+
+        protected virtual Project GetNewInstance(bool copyProperties)
+        {
+            Project copy = (Project)Activator.CreateInstance(this.GetType(), this.path);
+            if (copyProperties)
+            {
+                FieldInfo[] fields = this.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance);
+                foreach (var field in fields)
+                {
+                    var value = field.GetValue(this);
+                    field.SetValue(copy, value);
+                }
+            }
+
+            return copy;
+        }
+
+        #endregion
     }
 
     public enum OutputType

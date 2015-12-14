@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using PluginCore.Controls;
 using PluginCore.Localization;
 using ScintillaNet;
 using ScintillaNet.Configuration;
@@ -414,6 +413,15 @@ namespace PluginCore
         String DefaultSearchFilter { get; }
 
         #endregion
+    }
+
+    public interface IMultiConfigProject : IProject
+    {
+        IDictionary<String, IProject> Configurations { get; }
+        String ActiveConfiguration { get; }
+
+        void SetActiveConfiguration(String configName);
+        void AddConfiguration(String configName, String fromConfig);
     }
 
     public interface ISettings

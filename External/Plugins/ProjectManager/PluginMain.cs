@@ -190,15 +190,8 @@ namespace ProjectManager
             menus.BuildProject.Click += BuildProjectClick;
             menus.View.Click += delegate { OpenPanel(); };
             menus.GlobalClasspaths.Click += delegate { OpenGlobalClasspaths(); };
-            menus.ConfigurationSelector.FlatCombo.SelectedIndexChanged += delegate 
-            {
-                bool isDebug = menus.ConfigurationSelector.Text == TextHelper.GetString("Info.Debug");
-                FlexCompilerShell.Cleanup();
-                pluginUI.IsTraceDisabled = !isDebug;
-                Project project = activeProject;
-                if (project != null) project.TraceEnabled = isDebug;
-            };
-            menus.TargetBuildSelector.KeyDown += new KeyEventHandler(TargetBuildSelector_KeyDown);
+            menus.ConfigurationSelector.FlatCombo.SelectedIndexChanged += ConfigurationSelectorSelectedIndexChanged;
+            menus.TargetBuildSelector.KeyDown += TargetBuildSelector_KeyDown;
             menus.TargetBuildSelector.FlatCombo.SelectedIndexChanged += delegate { ApplyTargetBuild(); };
             menus.TargetBuildSelector.LostFocus += delegate { ApplyTargetBuild(); };
             
@@ -212,7 +205,7 @@ namespace ProjectManager
             menus.ProjectMenu.BuildProject.Click += BuildProjectClick;
             menus.ProjectMenu.CleanProject.Click += delegate { CleanProject(); };
             menus.ProjectMenu.Properties.Click += delegate { OpenProjectProperties(); };
-            menus.RecentProjects.ProjectSelected += delegate(string projectPath) { OpenProjectSilent(projectPath); };
+            menus.RecentProjects.ProjectSelected += OpenProjectSilent;
 
             buildActions = new BuildActions(MainForm, this);
             buildActions.BuildComplete += BuildComplete;
@@ -296,6 +289,55 @@ namespace ProjectManager
             buildTimer.Tick += new EventHandler(OnBuildTimerTick);
             buildingAll = false;
             runOutput = false;
+        }
+
+        private void ConfigurationSelectorSelectedIndexChanged(object sender, EventArgs e)
+        {
+            ToolStripComboBoxEx selector = menus.ConfigurationSelector;
+            Project project = activeProject;
+
+            if (selector.SelectedIndex == 0)
+            {
+                if (project == null)
+                {
+                    return;
+                }
+
+                //TODO: Proper management form
+                string suggestion = "";
+                string label = TextHelper.GetString("Label.NewName");
+                string title = TextHelper.GetString("Title.ExtractMethodDialog");
+                using (var lineDialog = new LineEntryDialog(title, label, suggestion))
+                {
+                    if (lineDialog.ShowDialog() != DialogResult.OK)
+                    {
+                        return;
+                    }
+
+                    suggestion = lineDialog.Line.Trim();
+
+                    if (suggestion.Length == 0)
+                    {
+                        return;
+                    }
+
+                    project.AddConfiguration(suggestion, null);
+                    project.Save();
+
+                    // Add through project
+                    selector.Items.Add(suggestion);
+                    selector.SelectedIndex = selector.Items.Count - 1;
+                    return;
+                }
+            }
+
+            bool isDebug = menus.ConfigurationSelector.Text.EndsWith(TextHelper.GetString("Info.Debug"), StringComparison.Ordinal);
+            FlexCompilerShell.Cleanup();
+            if (project != null)
+            {
+                project.SetActiveConfiguration(menus.ConfigurationSelector.Text);
+                project.TraceEnabled = isDebug;
+            }
         }
 
         private void BuildProjectClick(object sender, EventArgs e)
