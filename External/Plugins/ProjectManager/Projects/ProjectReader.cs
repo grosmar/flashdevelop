@@ -34,6 +34,13 @@ namespace ProjectManager.Projects
 
         protected virtual void PostProcess()
         {
+            // build configurations
+            if (project.Configurations == null || project.Configurations.Count == 0)
+            {
+                project.AddConfiguration("Debug", "");
+                project.AddConfiguration("Release", "");
+            }
+
             if (version > 1) return;
 
             // import FD3 project
@@ -63,6 +70,7 @@ namespace ProjectManager.Projects
                 case "postBuildCommand": ReadPostBuildCommand(); break;
                 case "options": ReadProjectOptions(); break;
                 case "storage": ReadPluginStorage(); break;
+                case "configurations": ReadConfigurations(); break;
             }
         }
 
@@ -70,7 +78,6 @@ namespace ProjectManager.Projects
         {
             if (IsEmptyElement)
             {
-                Read();
                 return;
             }
 
@@ -195,6 +202,33 @@ namespace ProjectManager.Projects
                     case "testMovieCommand": project.TestMovieCommand = Value;
                         break;
                     
+                }
+                Read();
+            }
+            ReadEndElement();
+        }
+
+        public void ReadConfigurations()
+        {
+            if (IsEmptyElement) return;
+
+            ReadStartElement("configurations");
+            while (Name == "configuration")
+            {
+                MoveToFirstAttribute();
+                switch (Name)
+                {
+                    case "name":
+                        string configName = Value;
+                        project.AddConfiguration(configName, null);
+                        // Hacky...
+                        Project projectConfig = project.Configurations[configName] as Project;
+                        ProjectReader reader = Activator.CreateInstance(this.GetType(), projectConfig.ProjectPath) as ProjectReader;
+                        reader.project = projectConfig;
+                        reader.ReadProject();
+
+                        break;
+
                 }
                 Read();
             }

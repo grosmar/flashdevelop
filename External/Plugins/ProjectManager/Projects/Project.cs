@@ -75,6 +75,8 @@ namespace ProjectManager.Projects
             OutputPath = "";
             PreBuildEvent = "";
             PostBuildEvent = "";
+
+            configurations = new Dictionary<string, IProject>();
         }
 
         public abstract string Language { get; }
@@ -395,49 +397,64 @@ namespace ProjectManager.Projects
             get { return this.activeConfiguration; }
         }
 
-        public void SetActiveConfiguration(string configName)
+        public virtual void SetActiveConfiguration(string configName)
         {
-            //TODO: Remove try catch
-            try
-            {
-                IProject activeConfig = configurations[configName];
-                this.activeConfiguration = configName;
+            IProject activeConfig = configurations[configName];
+            string tmpPath = this.path;
+            this.activeConfiguration = configName;
 
-                FieldInfo[] fields = activeConfig.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance);
-                foreach (var field in fields)
-                {
-                    var value = field.GetValue(this);
-                    field.SetValue(this, value);
-                }
-            }
-            catch (Exception)
+            FieldInfo[] fields = activeConfig.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
+            foreach (var field in fields)
             {
+                var value = field.GetValue(activeConfig);
+                if (field.Name == "configurations") continue;
+                field.SetValue(this, value);
             }
+            this.path = tmpPath;
         }
 
         public virtual void AddConfiguration(string configName, string fromConfig)
         {
-            Project newConfig = !string.IsNullOrEmpty(fromConfig) ? GetNewInstance(false) : GetNewInstance(true);
+            IProject sourceConfig = null;
 
-            if (this.configurations == null)
+            if (fromConfig != null && !this.configurations.TryGetValue(fromConfig, out sourceConfig))
             {
-                this.configurations = new Dictionary<string, IProject>();
+                sourceConfig = this;
             }
+
+            Project newConfig = GetNewInstance(configName, sourceConfig as Project);
 
             this.configurations[configName] = newConfig;
         }
 
-        protected virtual Project GetNewInstance(bool copyProperties)
+        public virtual void RemoveConfiguration(string configName)
         {
-            Project copy = (Project)Activator.CreateInstance(this.GetType(), this.path);
-            if (copyProperties)
+            this.configurations.Remove(configName);
+        }
+
+        /// <summary>
+        /// Creates a new project instance using reflection. Override if better performance or custom solution is needed.
+        /// </summary>
+        /// <param name="configurationName">The n</param>
+        /// <param name="sourceProject">Possible source project to inherit is properties</param>
+        /// <returns>A new instance of this project type</returns>
+        protected virtual Project GetNewInstance(string configurationName, Project sourceProject)
+        {
+            //TODO: Change
+            string configPath = this.path + configurationName;
+            Project copy = (Project)Activator.CreateInstance(this.GetType(), configPath);
+            if (sourceProject != null)
             {
-                FieldInfo[] fields = this.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance);
+                FieldInfo[] fields = sourceProject.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
                 foreach (var field in fields)
                 {
-                    var value = field.GetValue(this);
+                    object value = field.GetValue(sourceProject);
+                    // Filter out configurations, using the value to avoid working with magic strings
+                    if (value == sourceProject.configurations) continue;
                     field.SetValue(copy, value);
                 }
+
+                copy.path = configPath;
             }
 
             return copy;

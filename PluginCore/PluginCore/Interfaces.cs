@@ -422,6 +422,7 @@ namespace PluginCore
 
         void SetActiveConfiguration(String configName);
         void AddConfiguration(String configName, String fromConfig);
+        void RemoveConfiguration(string configName);
     }
 
     public interface ISettings

@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 using System.Xml;
+using PluginCore;
 
 namespace ProjectManager.Projects
 {
@@ -35,6 +37,7 @@ namespace ProjectManager.Projects
             WritePostBuildCommand();
             WriteProjectOptions();
             WriteStorage();
+            WriteConfigurations();
             OnBeforeEndProject();
             WriteEndElement();
             WriteEndDocument();
@@ -171,6 +174,28 @@ namespace ProjectManager.Projects
                 example.Append(" " + attribute + "=\"...\"");
             example.Append(" /> ");
             WriteComment(example.ToString());
+        }
+
+        /// <summary>
+        /// Writes the project build configurations assumming that each configuration is of type Project and thus calling its save method
+        /// </summary>
+        public virtual void WriteConfigurations()
+        {
+            if (project.Configurations != null)
+            {
+                WriteStartElement("configurations");
+                foreach (KeyValuePair<string, IProject> projectConfigEntry in project.Configurations)
+                {
+                    Project projectConfig = projectConfigEntry.Value as Project;
+                    if (projectConfig == null) continue;
+
+                    projectConfig.Save();
+                    WriteStartElement("configuration");
+                    WriteAttributeString("name", projectConfigEntry.Key);
+                    WriteEndElement();
+                }
+                WriteEndElement();
+            }
         }
     }
 }

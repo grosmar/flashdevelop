@@ -118,24 +118,29 @@ namespace ProjectManager.Controls
             ProjectChanged(project);
 
             ConfigurationSelector.Items.Clear();
-            ConfigurationSelector.Items.AddRange(new object[] { "Manage configurations...", TextHelper.GetString("Info.Debug"), TextHelper.GetString("Info.Release") });
+            ConfigurationSelector.Items.Add("Manage configurations...");
 
             int maxWidth = TextRenderer.MeasureText("Manage configurations...", ConfigurationSelector.Font).Width;
 
             if (project.Configurations != null)
             {
-                foreach (IProject projectConfig in project.Configurations.Values)
+                foreach (string projectConfigName in project.Configurations.Keys)
                 {
-                    ConfigurationSelector.Items.Add(projectConfig.Name);
-                    int temp = TextRenderer.MeasureText(projectConfig.Name, ConfigurationSelector.Font).Width;
+                    ConfigurationSelector.Items.Add(projectConfigName);
+                    int temp = TextRenderer.MeasureText(projectConfigName, ConfigurationSelector.Font).Width;
                     if (temp > maxWidth)
                     {
                         maxWidth = temp;
                     }
                 }
             }
+            else
+            {
+                ConfigurationSelector.Items.AddRange(new object[] { TextHelper.GetString("Info.Debug"), TextHelper.GetString("Info.Release") });
+            }
 
             ConfigurationSelector.FlatCombo.DropDownWidth = maxWidth;
+            ConfigurationSelector.SelectedIndex = 1;
         }
 
         public void CloseProject()

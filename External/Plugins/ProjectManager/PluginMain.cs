@@ -321,7 +321,7 @@ namespace ProjectManager
                         return;
                     }
 
-                    project.AddConfiguration(suggestion, null);
+                    project.AddConfiguration(suggestion, "Debug");
                     project.Save();
 
                     // Add through project
@@ -335,7 +335,11 @@ namespace ProjectManager
             FlexCompilerShell.Cleanup();
             if (project != null)
             {
-                project.SetActiveConfiguration(menus.ConfigurationSelector.Text);
+                if (project.ActiveConfiguration != menus.ConfigurationSelector.Text)
+                {
+                    project.SetActiveConfiguration(menus.ConfigurationSelector.Text);
+                    project.Save();
+                }
                 project.TraceEnabled = isDebug;
             }
         }
@@ -824,6 +828,7 @@ namespace ProjectManager
                     project.PropertiesChanged();
                     project.UpdateVars(true);
                     BroadcastProjectInfo(project);
+                    project.SetActiveConfiguration(project.ActiveConfiguration);
                     project.Save();
                     menus.ProjectChanged(project);
                 }
