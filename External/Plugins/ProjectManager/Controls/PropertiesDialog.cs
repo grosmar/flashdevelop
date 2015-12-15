@@ -1,17 +1,17 @@
 using System;
-using System.IO;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
-using ProjectManager.Projects;
-using ProjectManager.Helpers;
+using Ookii.Dialogs;
 using PluginCore;
 using PluginCore.Managers;
 using PluginCore.Localization;
 using PluginCore.Controls;
 using ProjectManager.Actions;
-using System.Collections.Generic;
-using Ookii.Dialogs;
+using ProjectManager.Helpers;
+using ProjectManager.Projects;
 
 namespace ProjectManager.Controls
 {
@@ -794,7 +794,7 @@ namespace ProjectManager.Controls
 
         #endregion
 
-        private Project baseProject;
+        private Project ownerProject;
         private Project project;
         private CompilerOptions optionsCopy;
         private Boolean propertiesChanged;
@@ -818,14 +818,14 @@ namespace ProjectManager.Controls
 
         private void CreateClassPathControl()
         {
-            this.classpathControl = new ProjectManager.Controls.ClasspathControl();
-            this.classpathControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.classpathControl = new ClasspathControl();
+            this.classpathControl.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             this.classpathControl.Classpaths = new string[0];
             this.classpathControl.Language = null;
-            this.classpathControl.Location = new System.Drawing.Point(17, 22);
+            this.classpathControl.Location = new Point(17, 22);
             this.classpathControl.Name = "classpathControl";
             this.classpathControl.Project = null;
-            this.classpathControl.Size = new System.Drawing.Size(287, 134);
+            this.classpathControl.Size = new Size(287, 134);
             this.classpathControl.TabIndex = 0;
             this.groupBox3.Controls.Add(this.classpathControl);
         }
@@ -834,11 +834,12 @@ namespace ProjectManager.Controls
 
         public void SetProject(Project project)
         {
-            this.baseProject = project;
+            this.ownerProject = project;
             if (!string.IsNullOrEmpty(project.ActiveConfiguration) && project.Configurations != null)
             {
-                this.project = project.Configurations[baseProject.ActiveConfiguration] as Project;
+                this.project = project.Configurations[project.ActiveConfiguration] as Project;
             }
+            else this.project = project;
 
             BuildDisplay();
         }
@@ -916,11 +917,11 @@ namespace ProjectManager.Controls
 
         protected virtual void BuildDisplay()
         {
-            this.Text = " " + baseProject.Name + " (" + baseProject.LanguageDisplayName + ") " + TextHelper.GetString("Info.Properties");
+            this.Text = " " + this.ownerProject.Name + " (" + this.ownerProject.LanguageDisplayName + ") " + TextHelper.GetString("Info.Properties");
 
-            if (!string.IsNullOrEmpty(this.baseProject.ActiveConfiguration) && this.baseProject.Configurations != null)
+            if (!string.IsNullOrEmpty(this.ownerProject.ActiveConfiguration) && this.ownerProject.Configurations != null)
             {
-                this.Text += " - " + "Configuration:" + " " + this.baseProject.ActiveConfiguration;
+                this.Text += " - " + "Configuration:" + " " + this.ownerProject.ActiveConfiguration;
             }
 
             langPlatform = GetLanguagePlatform(project.MovieOptions.Platform);
@@ -1040,9 +1041,9 @@ namespace ProjectManager.Controls
         {
             MovieOptions options = project.MovieOptions;
 
-            string[] types = Array.ConvertAll<OutputType, string>(
+            string[] types = Array.ConvertAll(
                     project.MovieOptions.OutputTypes, 
-                    (ot) => ot.ToString()
+                    ot => ot.ToString()
                 );
             InitCombo(outputCombo, types, project.OutputType, "Label.OutputType");
             outputCombo.SelectedIndexChanged += new EventHandler(outputCombo_SelectedIndexChanged);

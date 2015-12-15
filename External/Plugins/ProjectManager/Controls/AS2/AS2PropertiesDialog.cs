@@ -1,14 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
+using System.IO;
 using System.Windows.Forms;
-using ProjectManager.Projects.AS2;
 using PluginCore.Localization;
 using PluginCore.Managers;
-using System.IO;
+using ProjectManager.Projects.AS2;
 
 namespace ProjectManager.Controls.AS2
 {
@@ -21,13 +15,20 @@ namespace ProjectManager.Controls.AS2
             InitializeLocalization();
         }
 
-        AS2Project project { get { return (AS2Project)BaseProject; } }
+        private AS2Project Project
+        {
+            get
+            {
+
+                return (AS2Project) BaseProject;
+            }
+        }
 
         protected override void BuildDisplay()
         {
             base.BuildDisplay();
-            injectionCheckBox.Checked = project.UsesInjection;
-            inputSwfBox.Text = project.InputPath;
+            injectionCheckBox.Checked = Project.UsesInjection;
+            inputSwfBox.Text = Project.InputPath;
             AssetsChanged = false;
         }
 
@@ -48,7 +49,7 @@ namespace ProjectManager.Controls.AS2
 
         private void injectionCheckBox_CheckedChanged(object sender, System.EventArgs e)
         {
-            if (injectionCheckBox.Checked && project.LibraryAssets.Count > 0)
+            if (injectionCheckBox.Checked && Project.LibraryAssets.Count > 0)
             {
                 string msg = TextHelper.GetString("Info.InjectionConfirmation");
                 string title = " " + TextHelper.GetString("FlashDevelop.Title.ConfirmDialog");
@@ -77,18 +78,18 @@ namespace ProjectManager.Controls.AS2
         {
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.Filter = TextHelper.GetString("Info.FlashMovieFilter");
-            dialog.InitialDirectory = project.Directory;
+            dialog.InitialDirectory = Project.Directory;
 
             // try pre-setting the current input path
             try
             {
-                string path = project.GetAbsolutePath(inputSwfBox.Text);
+                string path = Project.GetAbsolutePath(inputSwfBox.Text);
                 if (File.Exists(path)) dialog.FileName = path;
             }
             catch { }
 
             if (dialog.ShowDialog(this) == DialogResult.OK)
-                inputSwfBox.Text = project.GetRelativePath(dialog.FileName);
+                inputSwfBox.Text = Project.GetRelativePath(dialog.FileName);
         }
 
         protected override bool Apply()
@@ -100,17 +101,17 @@ namespace ProjectManager.Controls.AS2
             }
             else if (injectionCheckBox.Checked)
             {
-                project.InputPath = inputSwfBox.Text;
+                Project.InputPath = inputSwfBox.Text;
 
                 // unassign any existing assets - you've been warned already
-                if (project.LibraryAssets.Count > 0)
+                if (Project.LibraryAssets.Count > 0)
                 {
-                    project.LibraryAssets.Clear();
+                    Project.LibraryAssets.Clear();
                     AssetsChanged = true;
                 }
             }
             else
-                project.InputPath = "";
+                Project.InputPath = "";
 
             return base.Apply();
         }
