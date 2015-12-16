@@ -128,12 +128,12 @@ namespace ProjectManager.Projects
         {
             WriteComment(" Plugin storage ");
             WriteStartElement("storage");
-            foreach (string key in project.storage.Keys)
+            foreach (KeyValuePair<string, string> storageEntry in project.Storage)
             {
-                string value = project.storage[key];
+                string value = storageEntry.Value;
                 if (value == null) continue;
                 WriteStartElement("entry");
-                WriteAttributeString("key", key);
+                WriteAttributeString("key", storageEntry.Key);
                 WriteCData(value);
                 WriteEndElement();
             }

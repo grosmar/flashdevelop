@@ -36,7 +36,7 @@ namespace ProjectManager.Projects
         private PathCollection compileTargets;
         private HiddenPathCollection hiddenPaths;
         private AssetCollection libraryAssets;
-        internal Dictionary<string, string> storage;
+        private Dictionary<string, string> storage;
         private bool traceEnabled; // selected configuration 
         private string targetBuild;
         private string preferredSDK;
@@ -440,8 +440,7 @@ namespace ProjectManager.Projects
         /// <returns>A new instance of this project type</returns>
         protected virtual Project GetNewInstance(string configurationName, Project sourceProject)
         {
-            //TODO: Change
-            string configPath = this.path + configurationName;
+            string configPath = Path.GetFileNameWithoutExtension(this.path) + "." + configurationName + Path.GetExtension(this.path);
             Project copy = (Project)Activator.CreateInstance(this.GetType(), configPath);
             if (sourceProject != null)
             {

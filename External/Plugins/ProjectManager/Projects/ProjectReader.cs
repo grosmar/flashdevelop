@@ -34,13 +34,6 @@ namespace ProjectManager.Projects
 
         protected virtual void PostProcess()
         {
-            // build configurations
-            if (project.Configurations == null || project.Configurations.Count == 0)
-            {
-                project.AddConfiguration("Debug", "");
-                project.AddConfiguration("Release", "");
-            }
-
             if (version > 1) return;
 
             // import FD3 project
@@ -92,7 +85,7 @@ namespace ProjectManager.Projects
                 }
 
                 Read();
-                if (key != null) project.storage.Add(key, Value);
+                if (key != null) project.Storage[key] = Value;
                 Read();
                 ReadEndElement();
             }
