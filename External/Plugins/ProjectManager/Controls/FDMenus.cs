@@ -65,7 +65,7 @@ namespace ProjectManager.Controls
             ConfigurationSelector = new ToolStripComboBoxEx();
             ConfigurationSelector.Name = "ConfigurationSelector";
             ConfigurationSelector.ToolTipText = TextHelper.GetString("ToolTip.SelectConfiguration");
-            ConfigurationSelector.Items.AddRange(new object[] { "Manage configurations..", TextHelper.GetString("Info.Debug"), TextHelper.GetString("Info.Release") });
+            ConfigurationSelector.Items.AddRange(new object[] { TextHelper.GetString("Label.ManageBuildConfigurations"), TextHelper.GetString("Info.Debug"), TextHelper.GetString("Info.Release") });
             ConfigurationSelector.DropDownStyle = ComboBoxStyle.DropDownList;
             ConfigurationSelector.AutoSize = false;
             ConfigurationSelector.Enabled = false;
@@ -117,30 +117,7 @@ namespace ProjectManager.Controls
             BuildProject.Enabled = true;
             ProjectChanged(project);
 
-            ConfigurationSelector.Items.Clear();
-            ConfigurationSelector.Items.Add("Manage configurations...");
-
-            int maxWidth = TextRenderer.MeasureText("Manage configurations...", ConfigurationSelector.Font).Width;
-
-            if (project.Configurations != null)
-            {
-                foreach (string projectConfigName in project.Configurations.Keys)
-                {
-                    ConfigurationSelector.Items.Add(projectConfigName);
-                    int temp = TextRenderer.MeasureText(projectConfigName, ConfigurationSelector.Font).Width;
-                    if (temp > maxWidth)
-                    {
-                        maxWidth = temp;
-                    }
-                }
-            }
-            else
-            {
-                ConfigurationSelector.Items.AddRange(new object[] { TextHelper.GetString("Info.Debug"), TextHelper.GetString("Info.Release") });
-            }
-
-            ConfigurationSelector.FlatCombo.DropDownWidth = maxWidth;
-            ConfigurationSelector.SelectedIndex = 1;
+            RefreshConfigurationSelector(project);
         }
 
         public void CloseProject()
@@ -181,10 +158,53 @@ namespace ProjectManager.Controls
                 TargetBuildSelector.Items.Insert(0, target);
         }
 
-        
-        public void ToggleDebugRelease()
+        internal void RefreshConfigurationSelector(Project project)
         {
-            ConfigurationSelector.SelectedIndex = (ConfigurationSelector.SelectedIndex + 1) % ConfigurationSelector.Items.Count;
+            ConfigurationSelector.FlatCombo.BeginUpdate();
+            ConfigurationSelector.Items.Clear();
+            ConfigurationSelector.Items.Add(TextHelper.GetString("Label.ManageBuildConfigurations"));
+
+            int maxWidth = TextRenderer.MeasureText(ConfigurationSelector.Items[0].ToString(), ConfigurationSelector.Font).Width;
+            int selected = 1;
+
+            if (project.Configurations != null)
+            {
+                foreach (string projectConfigName in project.Configurations.Keys)
+                {
+                    string configName = projectConfigName;
+                    if (projectConfigName == "Debug") configName = TextHelper.GetString("Info.Debug");
+                    else if (projectConfigName == "Release") configName = TextHelper.GetString("Info.Release");
+
+                    ConfigurationSelector.Items.Add(configName);
+
+                    if (projectConfigName == project.ActiveConfiguration)
+                    {
+                        selected = ConfigurationSelector.Items.Count - 1;
+                    }
+
+                    int temp = TextRenderer.MeasureText(configName, ConfigurationSelector.Font).Width;
+                    if (temp > maxWidth)
+                    {
+                        maxWidth = temp;
+                    }
+                }
+            }
+            else
+            {
+                ConfigurationSelector.Items.AddRange(new object[] { TextHelper.GetString("Info.Debug"), TextHelper.GetString("Info.Release") });
+            }
+
+            ConfigurationSelector.SelectedIndex = selected;
+
+            ConfigurationSelector.FlatCombo.EndUpdate();
+            ConfigurationSelector.FlatCombo.DropDownWidth = maxWidth;
+        }
+
+        public void ToggleConfiguration()
+        {
+            int index = (ConfigurationSelector.SelectedIndex + 1) % ConfigurationSelector.Items.Count;
+            if (index == 0) index = 1; 
+            ConfigurationSelector.SelectedIndex = index;
         }
     }
 

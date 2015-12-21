@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -76,7 +77,7 @@ namespace ProjectManager.Projects
             PreBuildEvent = "";
             PostBuildEvent = "";
 
-            configurations = new Dictionary<string, IProject>();
+            configurations = new ConfigurationsDictionary();
         }
 
         public abstract string Language { get; }
@@ -384,10 +385,13 @@ namespace ProjectManager.Projects
 
         #region IMultiConfigProject
 
-        private IDictionary<string, IProject> configurations;
+        private ConfigurationsDictionary configurations;
         private string activeConfiguration;
 
-        public IDictionary<string, IProject> Configurations
+        public event EventHandler ConfigurationsModified;
+        public event EventHandler ActiveConfigurationChanged;
+
+        public IReadOnlyDictionary<string, IProject> Configurations
         {
             get { return this.configurations; }
         }
@@ -401,6 +405,7 @@ namespace ProjectManager.Projects
         {
             IProject activeConfig = configurations[configName];
             string tmpPath = this.path;
+            string tmpConfig = this.activeConfiguration;
             this.activeConfiguration = configName;
 
             FieldInfo[] fields = activeConfig.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
@@ -411,6 +416,8 @@ namespace ProjectManager.Projects
                 field.SetValue(this, value);
             }
             this.path = tmpPath;
+
+            if (tmpConfig != configName) OnActiveConfigurationChanged();
         }
 
         public virtual void AddConfiguration(string configName, string fromConfig)
@@ -424,12 +431,38 @@ namespace ProjectManager.Projects
 
             Project newConfig = GetNewInstance(configName, sourceConfig as Project);
 
-            this.configurations[configName] = newConfig;
+            this.configurations.internalDict[configName] = newConfig;
+
+            this.OnConfigurationsModified();
         }
 
         public virtual void RemoveConfiguration(string configName)
         {
-            this.configurations.Remove(configName);
+            this.configurations.internalDict.Remove(configName);
+
+            this.OnConfigurationsModified();
+        }
+
+        public void RenameConfiguration(string configName, string newName)
+        {
+            if (configName.Equals(newName, StringComparison.OrdinalIgnoreCase)) return;
+
+            this.configurations.internalDict[newName] = this.configurations.internalDict[configName];
+            this.configurations.internalDict.Remove(configName);
+
+            this.OnConfigurationsModified();
+        }
+
+        protected void OnConfigurationsModified()
+        {
+            if (this.ConfigurationsModified != null)
+                this.ConfigurationsModified(this, EventArgs.Empty);
+        }
+
+        protected void OnActiveConfigurationChanged()
+        {
+            if (this.ActiveConfigurationChanged != null)
+                this.ActiveConfigurationChanged(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -458,6 +491,60 @@ namespace ProjectManager.Projects
 
             return copy;
         }
+
+        #region Private classes
+
+        private class ConfigurationsDictionary : IReadOnlyDictionary<string, IProject>
+        {
+            internal SortedDictionary<string, IProject> internalDict;
+
+            public int Count
+            {
+                get { return internalDict.Count; }
+            }
+
+            public IProject this[string key]
+            {
+                get { return internalDict[key]; }
+            }
+
+            public IEnumerable<string> Keys
+            {
+                get { return internalDict.Keys; }
+            }
+
+            public IEnumerable<IProject> Values
+            {
+                get { return internalDict.Values; }
+            }
+
+            public ConfigurationsDictionary()
+            {
+                this.internalDict = new SortedDictionary<string, IProject>(StringComparer.OrdinalIgnoreCase);
+            }
+
+            public IEnumerator<KeyValuePair<string, IProject>> GetEnumerator()
+            {
+                return internalDict.GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return internalDict.GetEnumerator();
+            }
+
+            public bool ContainsKey(string key)
+            {
+                return internalDict.ContainsKey(key);
+            }
+
+            public bool TryGetValue(string key, out IProject value)
+            {
+                return internalDict.TryGetValue(key, out value);
+            }
+        }
+
+        #endregion
 
         #endregion
     }

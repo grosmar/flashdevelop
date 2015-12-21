@@ -16,13 +16,13 @@ namespace ProjectManager
     public class PluginUI : DockPanelControl
     {
         public FDMenus menus;
-        TreeBar treeBar;
-        Project project;
-        PluginMain plugin;
-        LinkLabel help;
-        ProjectTreeView tree;
-        ProjectContextMenu menu;
-        bool isEditingLabel;
+        private TreeBar treeBar;
+        private Project project;
+        private PluginMain plugin;
+        private LinkLabel help;
+        private ProjectTreeView tree;
+        private ProjectContextMenu menu;
+        private bool isEditingLabel;
 
         public event EventHandler NewProject;
         public event EventHandler OpenProject;
@@ -129,7 +129,6 @@ namespace ProjectManager
             List<Project> projects = tree.Projects;
             projects.Clear(); // only one project active
             if (project != null) projects.Add(project);
-            else projects.Clear();
             tree.Projects = projects;
             tree.Project = project;
             tree_AfterSelect(tree, null);
@@ -139,7 +138,6 @@ namespace ProjectManager
             if (project != null)
             {
                 TreeBar.ShowHidden.Checked = project.ShowHiddenPaths;
-                IsTraceDisabled = !project.TraceEnabled;
             }
         }
 
@@ -148,16 +146,6 @@ namespace ProjectManager
         public ProjectTreeView Tree  { get { return this.tree; }  }
         public ProjectContextMenu Menu  { get { return this.menu; }  }
         public TreeBar TreeBar  { get { return this.treeBar; } }
-
-        public bool IsTraceDisabled
-        {
-            get { return menus.ConfigurationSelector.Text.EndsWith(TextHelper.GetString("Info.Debug"), StringComparison.Ordinal); }
-            set
-            {
-                menus.ConfigurationSelector.SelectedIndex = (value) ? 2 : 1;
-                PluginMain.Settings.GetPrefs(project).DebugMode = !value;
-            }
-        }
 
         /// <summary>
         /// A label of the project tree is currently beeing edited

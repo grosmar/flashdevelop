@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 
 namespace PluginCore.Localization
@@ -22,6 +23,22 @@ namespace PluginCore
 {
     public interface IProject { }
     public interface IMultiConfigProject : IProject { }
+
+    // From .NET 4.5...
+    public interface IReadOnlyCollection<T> : IEnumerable<T>
+    {
+        int Count { get; }
+    }
+
+    // From .NET 4.5...
+    public interface IReadOnlyDictionary<TKey, TValue> : IReadOnlyCollection<KeyValuePair<TKey, TValue>>
+    {
+        TValue this[TKey key] { get; }
+        IEnumerable<TKey> Keys { get; }
+        IEnumerable<TValue> Values { get; }
+        bool ContainsKey(TKey key);
+        bool TryGetValue(TKey key, out TValue value);
+    }
 }
 
 namespace ProjectManager.Controls

@@ -5978,4 +5978,28 @@
     <value>No contextual code generation available.</value>
     <comment>REQUIRES TRANSLATION</comment>
   </data>
+  <data name="ProjectManager.Title.ManageBuildConfigurations" xml:space="preserve">
+    <value>Manage Build Configurations</value>
+    <comment>Added after 5.0.2</comment>
+  </data>
+  <data name="ProjectManager.Title.AddBuildConfigurations" xml:space="preserve">
+    <value>New Build Configuration</value>
+    <comment>Added after 5.0.2</comment>
+  </data>
+  <data name="ProjectManager.Label.SourceConfiguration" xml:space="preserve">
+    <value>Copy con&amp;figuration from:</value>
+    <comment>Added after 5.0.2</comment>
+  </data>
+  <data name="ProjectManager.Alert.Message.InvalidConfigurationName" xml:space="preserve">
+    <value>Invalid configuration name</value>
+    <comment>Added after 5.0.2</comment>
+  </data>
+  <data name="ProjectManager.Label.ManageBuildConfigurations" xml:space="preserve">
+    <value>Manage build configurations...</value>
+    <comment>Added after 5.0.2</comment>
+  </data>
+  <data name="ProjectManager.Info.ConfirmDeleteConfiguration" xml:space="preserve">
+    <value>Are you sure you want to delete the selected configuration?</value>
+    <comment>Added after 5.0.2</comment>
+  </data>
 </root>
