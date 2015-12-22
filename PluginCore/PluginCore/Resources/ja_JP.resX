@@ -6043,7 +6043,7 @@ UseData:"</value>
     <comment>Added after 5.0.2</comment>
   </data>
   <data name="ProjectManager.Label.ManageBuildConfigurations" xml:space="preserve">
-    <value>Manage build configurations...</value>
+    <value>Manage configurations...</value>
     <comment>Added after 5.0.2</comment>
   </data>
   <data name="ProjectManager.Info.ConfirmDeleteConfiguration" xml:space="preserve">
