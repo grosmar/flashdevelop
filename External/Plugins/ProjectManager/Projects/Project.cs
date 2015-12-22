@@ -473,7 +473,8 @@ namespace ProjectManager.Projects
         /// <returns>A new instance of this project type</returns>
         protected virtual Project GetNewInstance(string configurationName, Project sourceProject)
         {
-            string configPath = Path.GetFileNameWithoutExtension(this.path) + "." + configurationName + Path.GetExtension(this.path);
+            string configPath = Path.Combine(Path.GetDirectoryName(this.path),
+                Path.GetFileNameWithoutExtension(this.path) + "." + configurationName + Path.GetExtension(this.path));
             Project copy = (Project)Activator.CreateInstance(this.GetType(), configPath);
             if (sourceProject != null)
             {
