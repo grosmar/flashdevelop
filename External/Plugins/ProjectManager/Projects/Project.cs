@@ -33,15 +33,19 @@ namespace ProjectManager.Projects
          
         protected MovieOptions movieOptions;
         private CompilerOptions compilerOptions;
+        [SharedConfigurationField]
         private PathCollection classpaths;
         private PathCollection compileTargets;
         private HiddenPathCollection hiddenPaths;
+        [SharedConfigurationField]
         private AssetCollection libraryAssets;
+        [SharedConfigurationField]
         private Dictionary<string, string> storage;
         private bool traceEnabled; // selected configuration 
         private string targetBuild;
         private string preferredSDK;
         private string currentSDK;
+        [SharedConfigurationField]
         private PathCollection absClasspaths;
         private BuildEventInfo[] vars; // arguments to replace in paths
 
@@ -385,6 +389,7 @@ namespace ProjectManager.Projects
 
         #region IMultiConfigProject
 
+        [IgnoredConfigurationField]
         private ConfigurationsDictionary configurations;
         private string activeConfiguration;
 
@@ -548,6 +553,18 @@ namespace ProjectManager.Projects
         #endregion
 
         #endregion
+    }
+
+    [AttributeUsage(AttributeTargets.Field)]
+    public class SharedConfigurationFieldAttribute : Attribute
+    {
+        
+    }
+
+    [AttributeUsage(AttributeTargets.Field)]
+    public class IgnoredConfigurationFieldAttribute : Attribute
+    {
+
     }
 
     public enum OutputType

@@ -124,6 +124,7 @@ namespace ProjectManager.Projects.AS3
 
         #region SWC assets management
 
+        [SharedConfigurationField]
         public AssetCollection SwcLibraries;
 
         public override bool IsLibraryAsset(string path)

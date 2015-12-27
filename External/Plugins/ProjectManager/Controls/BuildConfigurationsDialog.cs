@@ -113,11 +113,11 @@ namespace ProjectManager.Controls
 
         private void ReloadProjectConfigurations(bool keepFocus)
         {
+            string selectedItem = keepFocus && configsList.SelectedItems.Count > 0 ? configsList.SelectedItems[0].Text : null;
+
             configsList.Items.Clear();
 
             if (project == null || project.Configurations == null) return;
-
-            string selectedItem = keepFocus && configsList.SelectedItems.Count > 0 ? configsList.SelectedItems[0].Text : null;
 
             foreach (string configName in project.Configurations.Keys)
             {
