@@ -8,6 +8,7 @@ using PluginCore.Helpers;
 using PluginCore.Controls;
 using ProjectManager;
 using PluginCore;
+using ProjectManager.Helpers;
 
 namespace ProjectManager.Controls
 {
@@ -271,9 +272,9 @@ namespace ProjectManager.Controls
             List<String> matchedFiles;
             if (this.textBox.Text.Length > 0)
             {
-                matchedFiles = SearchUtil.getMatchedItems(this.openedFiles, this.textBox.Text, "\\", 0);
+                matchedFiles = SearchUtil.GetMatchedItems(this.openedFiles, this.textBox.Text, "\\", 0);
                 if (matchedFiles.Capacity > 0) matchedFiles.Add(ITEM_SPACER);
-                matchedFiles.AddRange(SearchUtil.getMatchedItems(this.projectFiles, this.textBox.Text, "\\", this.MAX_ITEMS));
+                matchedFiles.AddRange(SearchUtil.GetMatchedItems(this.projectFiles, this.textBox.Text, "\\", this.MAX_ITEMS));
             }
             else matchedFiles = openedFiles;
             foreach (String file in matchedFiles)
@@ -510,63 +511,5 @@ namespace ProjectManager.Controls
         #endregion
 
     }
-
-    #region Helpers
-
-    class SearchUtil
-    {
-        public delegate Boolean Comparer(String value1, String value2, String value3);
-
-        public static List<String> getMatchedItems(List<String> source, String searchText, String pathSeparator, Int32 limit)
-        {
-            Int32 i = 0;
-            List<String> matchedItems = new List<String>();
-            String firstChar = searchText.Substring(0, 1);
-            Comparer searchMatch = (firstChar == firstChar.ToUpper()) ? new Comparer(AdvancedSearchMatch) : new Comparer(SimpleSearchMatch);
-            foreach (String item in source)
-            {
-                if (searchMatch(item, searchText, pathSeparator))
-                {
-                    matchedItems.Add(item);
-                    if (limit > 0 && i++ > limit) break;
-                }
-            }
-            return matchedItems;
-        }
-
-        static private bool AdvancedSearchMatch(String file, String searchText, String pathSeparator)
-        {
-            int i = 0; int j = 0;
-            if (file.Length < searchText.Length) return false;
-            Char[] text = Path.GetFileName(file).ToCharArray();
-            Char[] pattern = searchText.ToCharArray();
-            while (i < pattern.Length)
-            {
-                while (i < pattern.Length && j < text.Length && pattern[i] == text[j])
-                {
-                    i++;
-                    j++;
-                }
-                if (i == pattern.Length) return true;
-                if (Char.IsLower(pattern[i])) return false;
-                while (j < text.Length && Char.IsLower(text[j]))
-                {
-                    j++;
-                }
-                if (j == text.Length) return false;
-                if (pattern[i] != text[j]) return false;
-            }
-            return (i == pattern.Length);
-        }
-
-        private static Boolean SimpleSearchMatch(String file, String searchText, String pathSeparator)
-        {
-            String fileName = Path.GetFileName(file).ToLower();
-            return fileName.IndexOfOrdinal(searchText.ToLower()) > -1;
-        }
-
-    }
-
-    #endregion
 
 }
