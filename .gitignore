@@ -5,7 +5,6 @@ Thumbs.db
 *.obj
 *.vshost.exe
 *.vshost.exe.manifest
-*.config
 *.fdb
 *.fdl
 *.fda
