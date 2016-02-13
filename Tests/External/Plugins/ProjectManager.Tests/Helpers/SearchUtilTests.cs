@@ -40,5 +40,16 @@ namespace ProjectManager.Tests
             Assert.IsFalse(ProjectManager.Helpers.SearchUtil.AdvancedSearchMatch("AdvancedLoaderClass", "dvanclc", "/"));
             Assert.IsFalse(ProjectManager.Helpers.SearchUtil.AdvancedSearchMatch("AdvancedLoaderClass", "adass", "/"));
         }
+
+        [Test]
+        public void TestAdvancedSearchMatchSpeed()
+        {
+
+            for (int i = 0; i < 10000; i++ )
+            {
+                ProjectManager.Helpers.SearchUtil.AdvancedSearchMatch("AdvancedLoaderClass", "advancloadeclas", "/");
+            }
+            
+        }
     }
 }
