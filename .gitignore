@@ -5,7 +5,6 @@ Thumbs.db
 *.obj
 *.vshost.exe
 *.vshost.exe.manifest
-*.config
 *.fdb
 *.fdl
 *.fda
@@ -25,3 +24,4 @@ PluginCore/Bin
 /FlashDevelop/Bin/Debug/Tools/fdbuild/fdbuild.exe
 FlashDevelop/Bin/Debug/Settings/Themes/CURRENT
 packages/
+Tests/External/Plugins/ProjectManager.Tests/bin/

@@ -109,6 +109,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Controls\TreeView\FileMapping.cs" />
+    <Compile Include="Helpers\SearchUtil.cs" />
     <Compile Include="Helpers\TreeViews\DragDropTreeView.cs">
       <SubType>Component</SubType>
     </Compile>
