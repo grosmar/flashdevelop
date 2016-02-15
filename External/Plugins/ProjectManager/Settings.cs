@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using PluginCore;
 using PluginCore.Localization;
 using PluginCore.Managers;
@@ -248,7 +249,11 @@ namespace ProjectManager
         {
             foreach (ProjectPreferences prefs in projectPrefList)
                 if (prefs.ProjectPath == project.ProjectPath)
+                {
+                    if (string.IsNullOrEmpty(prefs.ActiveConfiguration))
+                        prefs.ActiveConfiguration = prefs.DebugMode ? "Debug" : "Release";
                     return prefs;
+                }
 
             // ok, we haven't seen this project before.  let's take this opportunity
             // to clean out any prefs for projects that don't exist anymore
@@ -257,6 +262,7 @@ namespace ProjectManager
             ProjectPreferences newPrefs = new ProjectPreferences(project.ProjectPath);
             newPrefs.DebugMode = project.EnableInteractiveDebugger
                 && project.OutputType != OutputType.OtherIDE && project.OutputPath != "";
+            newPrefs.ActiveConfiguration = project.Configurations.Keys.First();
             projectPrefList.Add(newPrefs);
             return newPrefs;
         }
@@ -282,6 +288,7 @@ namespace ProjectManager
         public List<String> ExpandedPaths;
         public String ProjectPath;
         public String TargetBuild;
+        public String ActiveConfiguration;
 
         public ProjectPreferences()
         {

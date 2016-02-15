@@ -19,7 +19,17 @@ namespace ProjectManager.Projects
                 {
                     object[] para = new object[1];
                     para[0] = file;
-                    return (Project)projectType.GetMethod("Load").Invoke(null, para);
+
+                    Project project = (Project)projectType.GetMethod("Load").Invoke(null, para);
+
+                    // build configurations, not using ProjectReader.PostProcess because we cannot be certain that one will run
+                    if (project.Configurations == null || project.Configurations.Count == 0)
+                    {
+                        project.AddConfiguration("Debug", "");
+                        project.AddConfiguration("Release", "");
+                    }
+
+                    return project;
                 }
                 else
                 {

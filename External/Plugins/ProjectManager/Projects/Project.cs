@@ -1,7 +1,9 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using PluginCore;
@@ -25,23 +27,27 @@ namespace ProjectManager.Projects
     public delegate void ProjectUpdatingHandler(Project project);
     public delegate bool BeforeSaveHandler(Project project, string fileName);
 
-    public abstract class Project : IProject
+    public abstract class Project : IMultiConfigProject
     {
-        string path; // full path to this project, including filename
-
+        private string path; // full path to this project, including filename
+         
         protected MovieOptions movieOptions;
-        CompilerOptions compilerOptions;
-        PathCollection classpaths;
-        PathCollection compileTargets;
-        HiddenPathCollection hiddenPaths;
-        AssetCollection libraryAssets;
-        internal Dictionary<string, string> storage;
-        bool traceEnabled; // selected configuration 
-        string targetBuild;
-        string preferredSDK;
-        string currentSDK;
-        PathCollection absClasspaths;
-        BuildEventInfo[] vars; // arguments to replace in paths
+        private CompilerOptions compilerOptions;
+        [SharedConfigurationField]
+        private PathCollection classpaths;
+        private PathCollection compileTargets;
+        private HiddenPathCollection hiddenPaths;
+        [SharedConfigurationField]
+        private AssetCollection libraryAssets;
+        [SharedConfigurationField]
+        private Dictionary<string, string> storage;
+        private bool traceEnabled; // selected configuration 
+        private string targetBuild;
+        private string preferredSDK;
+        private string currentSDK;
+        [SharedConfigurationField]
+        private PathCollection absClasspaths;
+        private BuildEventInfo[] vars; // arguments to replace in paths
 
         public OutputType OutputType = OutputType.Unknown;
         public string InputPath; // For code injection
@@ -74,6 +80,8 @@ namespace ProjectManager.Projects
             OutputPath = "";
             PreBuildEvent = "";
             PostBuildEvent = "";
+
+            configurations = new ConfigurationsDictionary();
         }
 
         public abstract string Language { get; }
@@ -378,6 +386,185 @@ namespace ProjectManager.Projects
         {
             return System.IO.Directory.Exists(path);
         }
+
+        #region IMultiConfigProject
+
+        [IgnoredConfigurationField]
+        private ConfigurationsDictionary configurations;
+        private string activeConfiguration;
+
+        public event EventHandler ConfigurationsModified;
+        public event EventHandler ActiveConfigurationChanged;
+
+        public IReadOnlyDictionary<string, IProject> Configurations
+        {
+            get { return this.configurations; }
+        }
+
+        public string ActiveConfiguration
+        {
+            get { return this.activeConfiguration; }
+        }
+
+        public virtual void SetActiveConfiguration(string configName)
+        {
+            IProject activeConfig = configurations[configName];
+            string tmpPath = this.path;
+            string tmpConfig = this.activeConfiguration;
+            this.activeConfiguration = configName;
+
+            FieldInfo[] fields = activeConfig.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
+            foreach (var field in fields)
+            {
+                var value = field.GetValue(activeConfig);
+                if (field.Name == "configurations") continue;
+                field.SetValue(this, value);
+            }
+            this.path = tmpPath;
+
+            if (tmpConfig != configName) OnActiveConfigurationChanged();
+        }
+
+        public virtual void AddConfiguration(string configName, string fromConfig)
+        {
+            IProject sourceConfig = null;
+
+            if (fromConfig != null && !this.configurations.TryGetValue(fromConfig, out sourceConfig))
+            {
+                sourceConfig = this;
+            }
+
+            Project newConfig = GetNewInstance(configName, sourceConfig as Project);
+
+            this.configurations.internalDict[configName] = newConfig;
+
+            this.OnConfigurationsModified();
+        }
+
+        public virtual void RemoveConfiguration(string configName)
+        {
+            this.configurations.internalDict.Remove(configName);
+
+            this.OnConfigurationsModified();
+        }
+
+        public void RenameConfiguration(string configName, string newName)
+        {
+            if (configName.Equals(newName, StringComparison.OrdinalIgnoreCase)) return;
+
+            this.configurations.internalDict[newName] = this.configurations.internalDict[configName];
+            this.configurations.internalDict.Remove(configName);
+
+            this.OnConfigurationsModified();
+        }
+
+        protected void OnConfigurationsModified()
+        {
+            if (this.ConfigurationsModified != null)
+                this.ConfigurationsModified(this, EventArgs.Empty);
+        }
+
+        protected void OnActiveConfigurationChanged()
+        {
+            if (this.ActiveConfigurationChanged != null)
+                this.ActiveConfigurationChanged(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Creates a new project instance using reflection. Override if better performance or custom solution is needed.
+        /// </summary>
+        /// <param name="configurationName">The n</param>
+        /// <param name="sourceProject">Possible source project to inherit is properties</param>
+        /// <returns>A new instance of this project type</returns>
+        protected virtual Project GetNewInstance(string configurationName, Project sourceProject)
+        {
+            string configPath = Path.Combine(Path.GetDirectoryName(this.path),
+                Path.GetFileNameWithoutExtension(this.path) + "." + configurationName + Path.GetExtension(this.path));
+            Project copy = (Project)Activator.CreateInstance(this.GetType(), configPath);
+            if (sourceProject != null)
+            {
+                FieldInfo[] fields = sourceProject.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
+                foreach (var field in fields)
+                {
+                    object value = field.GetValue(sourceProject);
+                    // Filter out configurations, using the value to avoid working with magic strings
+                    if (value == sourceProject.configurations) continue;
+                    field.SetValue(copy, value);
+                }
+
+                copy.path = configPath;
+            }
+
+            return copy;
+        }
+
+        #region Private classes
+
+        private class ConfigurationsDictionary : IReadOnlyDictionary<string, IProject>
+        {
+            internal SortedDictionary<string, IProject> internalDict;
+
+            public int Count
+            {
+                get { return internalDict.Count; }
+            }
+
+            public IProject this[string key]
+            {
+                get { return internalDict[key]; }
+            }
+
+            public IEnumerable<string> Keys
+            {
+                get { return internalDict.Keys; }
+            }
+
+            public IEnumerable<IProject> Values
+            {
+                get { return internalDict.Values; }
+            }
+
+            public ConfigurationsDictionary()
+            {
+                this.internalDict = new SortedDictionary<string, IProject>(StringComparer.OrdinalIgnoreCase);
+            }
+
+            public IEnumerator<KeyValuePair<string, IProject>> GetEnumerator()
+            {
+                return internalDict.GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return internalDict.GetEnumerator();
+            }
+
+            public bool ContainsKey(string key)
+            {
+                return internalDict.ContainsKey(key);
+            }
+
+            public bool TryGetValue(string key, out IProject value)
+            {
+                return internalDict.TryGetValue(key, out value);
+            }
+        }
+
+        #endregion
+
+        #endregion
+    }
+
+    [AttributeUsage(AttributeTargets.Field)]
+    public class SharedConfigurationFieldAttribute : Attribute
+    {
+        
+    }
+
+    [AttributeUsage(AttributeTargets.Field)]
+    public class IgnoredConfigurationFieldAttribute : Attribute
+    {
+
     }
 
     public enum OutputType

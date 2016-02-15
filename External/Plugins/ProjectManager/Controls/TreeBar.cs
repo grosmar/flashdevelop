@@ -24,7 +24,7 @@ namespace ProjectManager.Controls
 
         private ProjectContextMenu treeMenu;
 
-        public TreeBar(FDMenus menus, ProjectContextMenu treeMenu)
+        public TreeBar(ProjectContextMenu treeMenu)
         {
             this.treeMenu = treeMenu;
             this.ImageScalingSize = ScaleHelper.Scale(new Size(16, 16));

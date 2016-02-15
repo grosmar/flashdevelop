@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using PluginCore.Controls;
 using PluginCore.Localization;
 using PluginCore.Managers;
 using ScintillaNet;
@@ -447,6 +446,36 @@ namespace PluginCore
         String DefaultSearchFilter { get; }
 
         #endregion
+    }
+
+    public interface IMultiConfigProject : IProject
+    {
+        event EventHandler ConfigurationsModified;
+        event EventHandler ActiveConfigurationChanged;
+
+        IReadOnlyDictionary<String, IProject> Configurations { get; }
+        String ActiveConfiguration { get; }
+
+        void SetActiveConfiguration(String configName);
+        void AddConfiguration(String configName, String fromConfig);
+        void RemoveConfiguration(String configName);
+        void RenameConfiguration(String configName, String newName);
+    }
+
+    // From .NET 4.5...
+    public interface IReadOnlyCollection<T> : IEnumerable<T>
+    {
+        int Count { get; }
+    }
+
+    // From .NET 4.5...
+    public interface IReadOnlyDictionary<TKey, TValue> : IReadOnlyCollection<KeyValuePair<TKey, TValue>>
+    {
+        TValue this[TKey key] { get; }
+        IEnumerable<TKey> Keys { get; }
+        IEnumerable<TValue> Values { get; }
+        bool ContainsKey(TKey key);
+        bool TryGetValue(TKey key, out TValue value);
     }
 
     public interface ISettings
