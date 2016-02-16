@@ -22,8 +22,8 @@ namespace ProjectManager.Helpers
             {
                 sequenceCaseMatchCount = AdvancedSearchMatch(item, searchText, pathSeparator);
                 if (sequenceCaseMatchCount > -1)
-                {   
-                    matchedItems.Add(new SearchResult(item, sequenceCaseMatchCount) );
+                {
+                    matchedItems.Add(new SearchResult(item, sequenceCaseMatchCount));
                     if (limit > 0 && i++ > limit) break;
                 }
             }
@@ -74,19 +74,20 @@ namespace ProjectManager.Helpers
                      * we add one to the sequenceCaseMatchCount, 
                      * and we reset the sequence because if it's uppercase it's a new start
                      */
-                    if ( index > -1 && lastSubText == text[index] )
+                    if (index > -1 && lastSubText == text[index])
                     {
                         matchStart = matchStart + matchLength;
                         matchLength = 1;
                         i++;
                         lastSequenceIndex = index;
                         sequenceCaseMatchCount++;
+                        lastIndex = index;
                         continue;
                     }
                 }
-                
+
                 // if this is not the start of the sequence or we failed to find the result of the first sequence we try to check case insensitive
-                if (matchLength > 0 || ( i == 0 && index == -1))
+                if (matchLength > 0 || (i == 0 && index == -1))
                 {
                     index = text.IndexOf(subText, lastSequenceIndex, StringComparison.OrdinalIgnoreCase);
                 }
@@ -100,7 +101,7 @@ namespace ProjectManager.Helpers
                     }
 
                     // if this is the first sequence and it was not started
-                    if ( matchStart == 0 && !Char.IsUpper(sequenceStartChar) && !Char.IsUpper(text[lastIndex + matchLength - 1]) )
+                    if (matchStart == 0 && !Char.IsUpper(sequenceStartChar) && !Char.IsUpper(text[lastIndex + matchLength - 1]))
                     {
                         return -1;
                     }
@@ -118,7 +119,7 @@ namespace ProjectManager.Helpers
                 }
                 else
                 {
-                    if ( matchLength == 0 )
+                    if (matchLength == 0)
                     {
                         sequenceStartChar = text[index];
                     }
@@ -129,7 +130,6 @@ namespace ProjectManager.Helpers
             }
             return sequenceCaseMatchCount;
         }
-
     }
 
     struct SearchResult

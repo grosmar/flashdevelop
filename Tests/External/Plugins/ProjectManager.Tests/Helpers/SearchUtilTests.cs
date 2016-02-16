@@ -52,6 +52,7 @@ namespace ProjectManager.Tests
             Assert.AreEqual(2, SearchUtil.AdvancedSearchMatch("AdvancedLoaderClass", "AlC", "/"));
             Assert.AreEqual(2, SearchUtil.AdvancedSearchMatch("AdvancedLoaderClass", "ALc", "/"));
             Assert.AreEqual(3, SearchUtil.AdvancedSearchMatch("AdvancedLoaderClass", "ALC", "/"));
+            Assert.AreEqual(2, SearchUtil.AdvancedSearchMatch("AdvancedLoaderClass", "ACL", "/"));
 
             Assert.AreEqual(0, SearchUtil.AdvancedSearchMatch("AdvancedLoaderClass", "alc", "/"));
             Assert.AreEqual(0, SearchUtil.AdvancedSearchMatch("AdvancedLoaderClass", "advlc", "/"));
@@ -63,6 +64,8 @@ namespace ProjectManager.Tests
             Assert.AreEqual(-1, SearchUtil.AdvancedSearchMatch("AdvancedLoaderClass", "dvancedlr", "/"));
             Assert.AreEqual(-1, SearchUtil.AdvancedSearchMatch("AdvancedLoaderClass", "dvanclc", "/"));
             Assert.AreEqual(-1, SearchUtil.AdvancedSearchMatch("AdvancedLoaderClass", "adass", "/"));
+            Assert.AreEqual(-1, SearchUtil.AdvancedSearchMatch("AdvancedLoaderTest", "ATL", "/"));
+
         }
 
         [Test]
