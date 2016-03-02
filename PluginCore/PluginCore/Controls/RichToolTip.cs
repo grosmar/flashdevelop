@@ -9,6 +9,7 @@ using TheArtOfDev.HtmlRenderer.Core;
 using TheArtOfDev.HtmlRenderer.WinForms;
 using TheArtOfDev.HtmlRenderer.WinForms.Adapters;
 using TheArtOfDev.HtmlRenderer.WinForms.Utilities;
+using PluginCore.Helpers;
 
 namespace PluginCore.Controls
 {
@@ -173,6 +174,13 @@ td {{ border: 1px solid #000; padding: 2px 3px 2px 3px; }}";
         {
             bool tooSmall = false;
 
+            int smallOffsetH = ScaleHelper.Scale(1);
+            int smallOffsetW = ScaleHelper.Scale(2);
+            int smallPadding = ScaleHelper.Scale(4);
+            int mediumPadding = ScaleHelper.Scale(10);
+            int minWidth = ScaleHelper.Scale(200);
+            maxWidth = ScaleHelper.Scale(maxWidth);
+
             // tooltip larger than the window: wrap
             var screenArea = Screen.FromControl(owner.Owner).WorkingArea;
             int limitLeft = screenArea.Left + 1;
@@ -190,9 +198,9 @@ td {{ border: 1px solid #000; padding: 2px 3px 2px 3px; }}";
             if (w > maxW)
             {
                 w = maxW;
-                if (w < 200)
+                if (w < minWidth)
                 {
-                    w = 200;
+                    w = minWidth;
                     tooSmall = true;
                 }
 
@@ -206,6 +214,7 @@ td {{ border: 1px solid #000; padding: 2px 3px 2px 3px; }}";
                 w += SystemInformation.VerticalScrollBarWidth;
                 h = limitBottom - host.Top - 2;
             }
+            toolTipRTB.Location = new Point(smallOffsetW, smallOffsetH);
             toolTipRTB.Size = new Size(w, h);
             host.Size = new Size(toolTipRTB.Size.Width + 2, toolTipRTB.Size.Height + 2);
 
